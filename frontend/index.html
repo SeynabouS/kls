@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KLS Tracking</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">KLS</div>
+        <div>
+          <div class="title">KLS Tracking</div>
+          <div class="subtitle">Produits • Stocks • Transactions • Dettes</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div id="currentUser" class="user-chip hidden"></div>
+        <div id="currentEnvoi" class="user-chip hidden"></div>
+        <button id="chooseEnvoiBtn" class="link hidden" type="button">Choisir envoi</button>
+        <a class="link" href="/admin/" target="_blank" rel="noreferrer">Admin Django</a>
+        <button id="logoutBtn" class="btn btn-secondary" type="button">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="loginView" class="card hidden">
+        <h2>Connexion</h2>
+        <p class="muted">
+          Utilise l'utilisateur admin créé au démarrage (voir `.env` / `docker-compose.yml`).
+        </p>
+        <form id="loginForm" class="grid">
+          <label>
+            <span>Utilisateur</span>
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Mot de passe</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Se connecter</button>
+        </form>
+        <div id="loginError" class="alert hidden"></div>
+      </section>
+
+      <section id="appView" class="hidden">
+        <nav class="tabs" aria-label="Navigation">
+          <button class="tab active" data-route="dashboard" type="button">Tableau de bord</button>
+          <button id="envoisTab" class="tab hidden" data-route="envois" type="button">Envois</button>
+          <button class="tab" data-route="reports" type="button">Rapports</button>
+          <button class="tab" data-route="products" type="button">Produits</button>
+          <button class="tab" data-route="transactions" type="button">Transactions</button>
+          <button class="tab" data-route="debts" type="button">Dettes clients</button>
+          <button class="tab" data-route="rates" type="button">Taux</button>
+          <button class="tab" data-route="audit" type="button">Historique</button>
+        </nav>
+
+        <section id="content" class="content"></section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="muted">API: <code>/api/</code> • Exports: <code>/api/export/*.xlsx</code></span>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

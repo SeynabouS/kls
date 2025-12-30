@@ -1,0 +1,108 @@
+services:
+  postgres:
+    image: postgres:14
+    container_name: kls_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kls_db}
+      POSTGRES_USER: ${POSTGRES_USER:-kls_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kls_network
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: kls_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@kls.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-change_me}
+    ports:
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - kls_network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: kls_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-kls_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-kls_db}}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
+      DJANGO_USE_HTTPS: ${DJANGO_USE_HTTPS:-0}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,nginx}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost,http://127.0.0.1}
+      DJANGO_TIME_ZONE: ${DJANGO_TIME_ZONE:-UTC}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@kls.com}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+      DJANGO_SUPERUSER_UPDATE_PASSWORD: ${DJANGO_SUPERUSER_UPDATE_PASSWORD:-0}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - backend_staticfiles:/app/staticfiles
+      - backend_media:/app/media
+    depends_on:
+      - postgres
+    networks:
+      - kls_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: kls_nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+      - backend_media:/media:ro
+    depends_on:
+      - backend
+    networks:
+      - kls_network
+
+  db_backup:
+    image: postgres:14
+    container_name: kls_db_backup
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-kls_user}
+      PGDATABASE: ${POSTGRES_DB:-kls_db}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    volumes:
+      - ./backups:/backups
+    command: >
+      sh -c "mkdir -p /backups && while true; do
+        ts=$$(date +%Y%m%d_%H%M%S);
+        pg_dump --format=custom --file=/backups/kls_$$ts.dump;
+        sleep 86400;
+      done"
+    networks:
+      - kls_network
+
+networks:
+  kls_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backend_staticfiles:
+  backend_media:

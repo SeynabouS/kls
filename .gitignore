@@ -1,0 +1,24 @@
+.env
+.venv
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+# Django static/media
+backend/staticfiles/
+backend/media/
+backend/.django_secret_key
+
+# Backups
+backups/
+
+# Exports / fichiers de test (souvent avec données)
+/*.xlsx
+/*.csv
+
+# Node (if added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

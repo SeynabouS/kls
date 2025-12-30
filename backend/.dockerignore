@@ -1,0 +1,9 @@
+.env
+.django_secret_key
+__pycache__/
+*.py[cod]
+*.log
+*.sqlite3
+media/
+staticfiles/
+*.dump
