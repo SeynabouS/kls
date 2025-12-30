@@ -30,4 +30,6 @@ python manage.py collectstatic --noinput
 python manage.py ensure_admin_user
 python manage.py sync_inventory_data
 
-exec gunicorn --bind 0.0.0.0:8000 --workers 2 kls.wsgi:application
+PORT="${PORT:-8000}"
+WORKERS="${GUNICORN_WORKERS:-2}"
+exec gunicorn --bind "0.0.0.0:${PORT}" --workers "${WORKERS}" kls.wsgi:application
